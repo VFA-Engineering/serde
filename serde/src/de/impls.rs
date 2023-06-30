@@ -1330,12 +1330,9 @@ where
             std::array::from_fn(|_| unsafe { mem::MaybeUninit::uninit().assume_init() });
 
         for idx in 0..N {
-            res[idx] = match seq.next_element() {
-                Ok(val) => match val {
-                    Some(val) => val,
-                    None => return Err(Error::invalid_length(idx, &self)),
-                },
-                Err(err) => return Err(err),
+            res[idx] = match seq.next_element()? {
+                Some(val) => val,
+                None => return Err(Error::invalid_length(idx, &self)),
             };
         }
 
