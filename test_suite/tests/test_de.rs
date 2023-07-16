@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::default::Default;
 use std::ffi::{CStr, CString, OsString};
 use std::fmt::Debug;
+use std::iter;
 use std::net;
 use std::num::{
     NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
@@ -44,6 +45,9 @@ mod macros;
 
 #[derive(Copy, Clone, PartialEq, Debug, Deserialize)]
 struct UnitStruct;
+
+#[derive(Copy, Clone, PartialEq, Debug, Deserialize)]
+struct GenericUnitStruct<const N: u8>;
 
 #[derive(PartialEq, Debug, Deserialize)]
 struct NewtypeStruct(i32);
@@ -199,7 +203,7 @@ fn assert_de_tokens_ignore(ignorable_tokens: &[Token]) {
     ]
     .into_iter()
     .chain(ignorable_tokens.iter().copied())
-    .chain(vec![Token::MapEnd].into_iter())
+    .chain(iter::once(Token::MapEnd))
     .collect();
 
     let expected = IgnoreBase { a: 1 };
@@ -880,6 +884,17 @@ fn test_unit() {
 fn test_unit_struct() {
     test(UnitStruct, &[Token::Unit]);
     test(UnitStruct, &[Token::UnitStruct { name: "UnitStruct" }]);
+}
+
+#[test]
+fn test_generic_unit_struct() {
+    test(GenericUnitStruct::<8>, &[Token::Unit]);
+    test(
+        GenericUnitStruct::<8>,
+        &[Token::UnitStruct {
+            name: "GenericUnitStruct",
+        }],
+    );
 }
 
 #[test]
