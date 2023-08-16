@@ -180,9 +180,9 @@ where
     where
         S: Serializer,
     {
-        let mut seq = try!(serializer.serialize_tuple(N));
+        let mut seq = tri!(serializer.serialize_tuple(N));
         for e in self {
-            try!(seq.serialize_element(e));
+            tri!(seq.serialize_element(e));
         }
         seq.end()
     }

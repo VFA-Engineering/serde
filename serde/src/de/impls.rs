@@ -1271,7 +1271,7 @@ where
     {
         let mut fail_idx = None;
         for (idx, dest) in self.0[..].iter_mut().enumerate() {
-            if try!(seq.next_element_seed(InPlaceSeed(dest))).is_none() {
+            if tri!(seq.next_element_seed(InPlaceSeed(dest))).is_none() {
                 fail_idx = Some(idx);
                 break;
             }
