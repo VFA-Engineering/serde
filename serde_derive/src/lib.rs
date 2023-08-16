@@ -13,8 +13,7 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.171")]
-#![allow(unknown_lints, bare_trait_objects)]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.183")]
 // Ignored clippy lints
 #![allow(
     // clippy false positive: https://github.com/rust-lang/rust-clippy/issues/7054
@@ -63,17 +62,22 @@
 )]
 #![cfg_attr(all(test, exhaustive), feature(non_exhaustive_omitted_patterns_lint))]
 
-#[macro_use]
+extern crate proc_macro2;
 extern crate quote;
-#[macro_use]
 extern crate syn;
 
+#[cfg(not(precompiled))]
 extern crate proc_macro;
-extern crate proc_macro2;
+#[cfg(precompiled)]
+extern crate proc_macro2 as proc_macro;
 
 mod internals;
 
 use proc_macro::TokenStream;
+#[cfg(precompiled)]
+use std::sync::atomic::AtomicBool;
+#[cfg(not(precompiled))]
+use syn::parse_macro_input;
 use syn::DeriveInput;
 
 #[macro_use]
@@ -86,9 +90,21 @@ mod dummy;
 mod pretend;
 mod ser;
 mod this;
-mod try;
 
-#[proc_macro_derive(Serialize, attributes(serde))]
+#[cfg(precompiled)]
+macro_rules! parse_macro_input {
+    ($tokenstream:ident as $ty:ty) => {
+        match syn::parse2::<$ty>($tokenstream) {
+            Ok(data) => data,
+            Err(err) => return err.to_compile_error(),
+        }
+    };
+}
+
+#[cfg(precompiled)]
+pub static DESERIALIZE_IN_PLACE: AtomicBool = AtomicBool::new(false);
+
+#[cfg_attr(not(precompiled), proc_macro_derive(Serialize, attributes(serde)))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
     ser::expand_derive_serialize(&mut input)
@@ -96,7 +112,7 @@ pub fn derive_serialize(input: TokenStream) -> TokenStream {
         .into()
 }
 
-#[proc_macro_derive(Deserialize, attributes(serde))]
+#[cfg_attr(not(precompiled), proc_macro_derive(Deserialize, attributes(serde)))]
 pub fn derive_deserialize(input: TokenStream) -> TokenStream {
     let mut input = parse_macro_input!(input as DeriveInput);
     de::expand_derive_deserialize(&mut input)
