@@ -112,6 +112,7 @@ impl Debug for Error {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl error::Error for Error {
     fn description(&self) -> &str {
         &self.err
@@ -174,6 +175,17 @@ where
     }
 }
 
+impl<'de, E> IntoDeserializer<'de, E> for UnitDeserializer<E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<E> Debug for UnitDeserializer<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.debug_struct("UnitDeserializer").finish()
@@ -184,12 +196,14 @@ impl<E> Debug for UnitDeserializer<E> {
 
 /// A deserializer that cannot be instantiated.
 #[cfg(feature = "unstable")]
+#[cfg_attr(docsrs, doc(cfg(feature = "unstable")))]
 pub struct NeverDeserializer<E> {
     never: !,
     marker: PhantomData<E>,
 }
 
 #[cfg(feature = "unstable")]
+#[cfg_attr(docsrs, doc(cfg(feature = "unstable")))]
 impl<'de, E> IntoDeserializer<'de, E> for !
 where
     E: de::Error,
@@ -219,6 +233,18 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct seq tuple
         tuple_struct map struct enum identifier ignored_any
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<'de, E> IntoDeserializer<'de, E> for NeverDeserializer<E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -276,6 +302,17 @@ macro_rules! primitive_deserializer {
             }
         }
 
+        impl<'de, E> IntoDeserializer<'de, E> for $name<E>
+        where
+            E: de::Error,
+        {
+            type Deserializer = Self;
+
+            fn into_deserializer(self) -> Self {
+                self
+            }
+        }
+
         impl<E> Debug for $name<E> {
             fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter
@@ -292,19 +329,16 @@ primitive_deserializer!(i8, "an `i8`.", I8Deserializer, visit_i8);
 primitive_deserializer!(i16, "an `i16`.", I16Deserializer, visit_i16);
 primitive_deserializer!(i32, "an `i32`.", I32Deserializer, visit_i32);
 primitive_deserializer!(i64, "an `i64`.", I64Deserializer, visit_i64);
+primitive_deserializer!(i128, "an `i128`.", I128Deserializer, visit_i128);
 primitive_deserializer!(isize, "an `isize`.", IsizeDeserializer, visit_i64 as i64);
 primitive_deserializer!(u8, "a `u8`.", U8Deserializer, visit_u8);
 primitive_deserializer!(u16, "a `u16`.", U16Deserializer, visit_u16);
 primitive_deserializer!(u64, "a `u64`.", U64Deserializer, visit_u64);
+primitive_deserializer!(u128, "a `u128`.", U128Deserializer, visit_u128);
 primitive_deserializer!(usize, "a `usize`.", UsizeDeserializer, visit_u64 as u64);
 primitive_deserializer!(f32, "an `f32`.", F32Deserializer, visit_f32);
 primitive_deserializer!(f64, "an `f64`.", F64Deserializer, visit_f64);
 primitive_deserializer!(char, "a `char`.", CharDeserializer, visit_char);
-
-serde_if_integer128! {
-    primitive_deserializer!(i128, "an `i128`.", I128Deserializer, visit_i128);
-    primitive_deserializer!(u128, "a `u128`.", U128Deserializer, visit_u128);
-}
 
 /// A deserializer holding a `u32`.
 pub struct U32Deserializer<E> {
@@ -366,6 +400,17 @@ where
         let _ = name;
         let _ = variants;
         visitor.visit_enum(self)
+    }
+}
+
+impl<'de, E> IntoDeserializer<'de, E> for U32Deserializer<E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -458,6 +503,17 @@ where
     }
 }
 
+impl<'de, 'a, E> IntoDeserializer<'de, E> for StrDeserializer<'a, E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<'de, 'a, E> de::EnumAccess<'de> for StrDeserializer<'a, E>
 where
     E: de::Error,
@@ -537,6 +593,17 @@ where
     }
 }
 
+impl<'de, E> IntoDeserializer<'de, E> for BorrowedStrDeserializer<'de, E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<'de, E> de::EnumAccess<'de> for BorrowedStrDeserializer<'de, E>
 where
     E: de::Error,
@@ -565,6 +632,7 @@ impl<'de, E> Debug for BorrowedStrDeserializer<'de, E> {
 
 /// A deserializer holding a `String`.
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 pub struct StringDeserializer<E> {
     value: String,
     marker: PhantomData<E>,
@@ -581,6 +649,7 @@ impl<E> Clone for StringDeserializer<E> {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl<'de, E> IntoDeserializer<'de, E> for String
 where
     E: de::Error,
@@ -639,6 +708,18 @@ where
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+impl<'de, E> IntoDeserializer<'de, E> for StringDeserializer<E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
 impl<'de, E> de::EnumAccess<'de> for StringDeserializer<E>
 where
     E: de::Error,
@@ -668,6 +749,7 @@ impl<E> Debug for StringDeserializer<E> {
 
 /// A deserializer holding a `Cow<str>`.
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 pub struct CowStrDeserializer<'a, E> {
     value: Cow<'a, str>,
     marker: PhantomData<E>,
@@ -684,6 +766,7 @@ impl<'a, E> Clone for CowStrDeserializer<'a, E> {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl<'de, 'a, E> IntoDeserializer<'de, E> for Cow<'a, str>
 where
     E: de::Error,
@@ -741,6 +824,18 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct seq tuple
         tuple_struct map struct identifier ignored_any
+    }
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl<'de, 'a, E> IntoDeserializer<'de, E> for CowStrDeserializer<'a, E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -821,6 +916,17 @@ where
     }
 }
 
+impl<'de, 'a, E> IntoDeserializer<'de, E> for BytesDeserializer<'a, E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<'a, E> Debug for BytesDeserializer<'a, E> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter
@@ -866,6 +972,17 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct seq tuple
         tuple_struct map struct enum identifier ignored_any
+    }
+}
+
+impl<'de, E> IntoDeserializer<'de, E> for BorrowedBytesDeserializer<'de, E>
+where
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -948,6 +1065,19 @@ where
     }
 }
 
+impl<'de, I, T, E> IntoDeserializer<'de, E> for SeqDeserializer<I, E>
+where
+    I: Iterator<Item = T>,
+    T: IntoDeserializer<'de, E>,
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<'de, I, T, E> de::SeqAccess<'de> for SeqDeserializer<I, E>
 where
     I: Iterator<Item = T>,
@@ -979,7 +1109,7 @@ struct ExpectedInSeq(usize);
 impl Expected for ExpectedInSeq {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         if self.0 == 1 {
-            write!(formatter, "1 element in sequence")
+            formatter.write_str("1 element in sequence")
         } else {
             write!(formatter, "{} elements in sequence", self.0)
         }
@@ -1002,6 +1132,7 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl<'de, T, E> IntoDeserializer<'de, E> for Vec<T>
 where
     T: IntoDeserializer<'de, E>,
@@ -1015,6 +1146,7 @@ where
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl<'de, T, E> IntoDeserializer<'de, E> for BTreeSet<T>
 where
     T: IntoDeserializer<'de, E> + Eq + Ord,
@@ -1028,6 +1160,7 @@ where
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'de, T, S, E> IntoDeserializer<'de, E> for HashSet<T, S>
 where
     T: IntoDeserializer<'de, E> + Eq + Hash,
@@ -1073,6 +1206,17 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct seq tuple
         tuple_struct map struct enum identifier ignored_any
+    }
+}
+
+impl<'de, A> IntoDeserializer<'de, A::Error> for SeqAccessDeserializer<A>
+where
+    A: de::SeqAccess<'de>,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -1187,6 +1331,21 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct tuple_struct map
         struct enum identifier ignored_any
+    }
+}
+
+impl<'de, I, E> IntoDeserializer<'de, E> for MapDeserializer<'de, I, E>
+where
+    I: Iterator,
+    I::Item: private::Pair,
+    First<I::Item>: IntoDeserializer<'de, E>,
+    Second<I::Item>: IntoDeserializer<'de, E>,
+    E: de::Error,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
@@ -1404,7 +1563,7 @@ struct ExpectedInMap(usize);
 impl Expected for ExpectedInMap {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         if self.0 == 1 {
-            write!(formatter, "1 element in map")
+            formatter.write_str("1 element in map")
         } else {
             write!(formatter, "{} elements in map", self.0)
         }
@@ -1414,6 +1573,7 @@ impl Expected for ExpectedInMap {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(any(feature = "std", feature = "alloc"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", feature = "alloc"))))]
 impl<'de, K, V, E> IntoDeserializer<'de, E> for BTreeMap<K, V>
 where
     K: IntoDeserializer<'de, E> + Eq + Ord,
@@ -1428,6 +1588,7 @@ where
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl<'de, K, V, S, E> IntoDeserializer<'de, E> for HashMap<K, V, S>
 where
     K: IntoDeserializer<'de, E> + Eq + Hash,
@@ -1489,6 +1650,17 @@ where
     }
 }
 
+impl<'de, A> IntoDeserializer<'de, A::Error> for MapAccessDeserializer<A>
+where
+    A: de::MapAccess<'de>,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
+    }
+}
+
 impl<'de, A> de::EnumAccess<'de> for MapAccessDeserializer<A>
 where
     A: de::MapAccess<'de>,
@@ -1539,6 +1711,17 @@ where
         bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option unit unit_struct newtype_struct seq tuple
         tuple_struct map struct enum identifier ignored_any
+    }
+}
+
+impl<'de, A> IntoDeserializer<'de, A::Error> for EnumAccessDeserializer<A>
+where
+    A: de::EnumAccess<'de>,
+{
+    type Deserializer = Self;
+
+    fn into_deserializer(self) -> Self {
+        self
     }
 }
 
