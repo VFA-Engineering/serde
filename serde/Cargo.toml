@@ -21,9 +21,6 @@ rustversion = "1"
 [dev-dependencies]
 serde_derive = { version = "1", path = "../serde_derive" }
 
-[lib]
-doc-scrape-examples = false
-
 [package.metadata.playground]
 features = ["derive", "rc"]
 
